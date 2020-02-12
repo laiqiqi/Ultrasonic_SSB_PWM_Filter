@@ -20,11 +20,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* Exported functions prototypes ---------------------------------------------*/
 
 /* Private defines -----------------------------------------------------------*/
-#define GPIO_LED1 LED1_GPIO_Port, LED1_Pin
-#define GPIO_BTN1 USER_Btn_GPIO_Port, USER_Btn_Pin
-#define GPIO_TEST GPIOC, GPIO_PIN_8
-#define GPIO_PWM GPIOE, GPIO_PIN_5
-
 #define STLK_TX_Pin GPIO_PIN_8
 #define STLK_RX_Pin GPIO_PIN_9
 #define USER_Btn_Pin GPIO_PIN_13
@@ -39,6 +34,12 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 #define LED3_GPIO_Port GPIOB
 #define LED2_Pin GPIO_PIN_7
 #define LED2_GPIO_Port GPIOB
+
+#define GPIO_LED1 LED1_GPIO_Port, LED1_Pin
+#define GPIO_LED3 LED3_GPIO_Port, LED3_Pin
+#define GPIO_BTN1 USER_Btn_GPIO_Port, USER_Btn_Pin
+#define GPIO_TEST GPIOC, GPIO_PIN_8
+#define GPIO_PWM GPIOE, GPIO_PIN_5
 
 #ifdef __cplusplus
 }

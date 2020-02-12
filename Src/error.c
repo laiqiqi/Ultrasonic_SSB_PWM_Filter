@@ -11,6 +11,6 @@
 // Turns on LED1 if error occurs
 void Error_Handler(void)
 {
-  HAL_GPIO_WritePin(GPIO_LED1, 1);
+  HAL_GPIO_WritePin(GPIO_LED3, 1);
 }
 

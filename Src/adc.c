@@ -6,8 +6,24 @@
  */
 
 #include "adc.h"
+#include "main.h"
 
 ADC_HandleTypeDef hadc1;
+
+#define ADC1_SAMPLING_TIME ADC_SAMPLETIME_15CYCLES
+
+void ADC_IRQHandler() {
+	HAL_ADC_IRQHandler(&hadc1);
+}
+
+void HAL_ADC_ErrorCallback(ADC_HandleTypeDef* hadc) {
+	Error_Handler();
+}
+
+void ADC1_interrupt_init() {
+	HAL_NVIC_SetPriority(ADC_IRQn, 0, 1);
+	HAL_NVIC_EnableIRQ(ADC_IRQn);
+}
 
 void ADC1_init(void) {
   ADC_ChannelConfTypeDef sConfig = {0};
@@ -30,14 +46,14 @@ void ADC1_init(void) {
 
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+  sConfig.SamplingTime = ADC1_SAMPLING_TIME;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
     Error_Handler();
   }
-}
 
-static void ADC_start(ADC_HandleTypeDef* hadc) {
-	HAL_ADC_Start(hadc);
+//  ADC1_interrupt_init();
+
+  DMA_ADC1_init(&hadc1);
 }
 
 static void ADC_poll_test(ADC_HandleTypeDef* hadc) {
@@ -54,8 +70,8 @@ static void ADC_poll_test(ADC_HandleTypeDef* hadc) {
 	}
 }
 
-void ADC1_start() {
-	ADC_start(&hadc1);
+void ADC1_start_DMA(uint32_t* buf, uint32_t bufsize) {
+	HAL_ADC_Start_DMA(&hadc1, buf, bufsize);
 }
 
 void ADC1_poll_test() {

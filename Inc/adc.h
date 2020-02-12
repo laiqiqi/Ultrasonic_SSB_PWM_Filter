@@ -12,11 +12,14 @@
 #include <string.h>
 #include "stm32f7xx_hal.h"
 
+#include "dma.h"
 #include "uart.h"
 #include "error.h"
 
+#define ADC_BUFFER_SIZE 45
+
 void ADC1_init();
-void ADC1_start();
+void ADC1_start_DMA(uint32_t*, uint32_t);
 
 void ADC1_poll_test();
 

@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "dma.h"
 #include "adc.h"
 #include "uart.h"
 #include "error.h"
 
 #include "main.h"
 
-#define PERIOD_40KHZ_TIM3 1350
-#define PERIOD_TIM3 PERIOD_40KHZ_TIM3
+#define TIM3_PERIOD_40KHZ 1350
+#define TIM3_PERIOD TIM3_PERIOD_40KHZ
 
 #define PWM_PRESCALE 0
-#define PWM_PWIDTH_11BIT_RES_X100 132
+#define PWM_PWIDTH_12BIT_RES_X1000 1318
 #define PWM_PWIDTH_INIT 3
 #define PWM_PERIOD_40KHZ 5400
 #define PWM_PERIOD PWM_PERIOD_40KHZ
@@ -19,7 +20,9 @@
 TIM_HandleTypeDef htim3; // Handles 40KHz refresh
 TIM_HandleTypeDef htim9; // Handles PWM
 
-static uint16_t g_pwidth = PWM_PWIDTH_INIT;
+static uint32_t g_pwidth = PWM_PWIDTH_INIT;
+
+static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -27,10 +30,10 @@ static void MX_TIM3_Init(void);
 static void MX_TIM9_Init(void);
 
 //-------------------------------------
-// Assumes pwidth is an 11 bit number (0 to 2047)
-static void PWM_set_11bit(uint32_t pwidth) {
+// Assumes pwidth is a 12 bit number (0 to 4095)
+static void PWM_set_12bit(uint32_t pwidth) {
 	TIM_OC_InitTypeDef sConfigOC;
-	uint32_t new_pwidth = (PWM_PWIDTH_11BIT_RES_X100 * pwidth)/100;
+	uint32_t new_pwidth = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth)/1000;
 
 	sConfigOC.OCMode = TIM_OCMODE_PWM1;
 	sConfigOC.Pulse = new_pwidth;
@@ -66,7 +69,7 @@ void PWM_start() {
 	}
 }
 
-void TIM3_start() {
+void TIM3_start_IT() {
     HAL_TIM_Base_Start_IT(&htim3);
 }
 
@@ -80,18 +83,37 @@ void TIM3_Interrupt_Init(void) {
 void TIM3_IRQHandler(void) {
 	__HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
 
-	PWM_set_11bit(g_pwidth);
+	PWM_set_12bit(g_pwidth);
 
-	//HAL_GPIO_TogglePin(GPIO_TEST);
+//	HAL_GPIO_TogglePin(GPIO_LED1);
 }
 
 void PWM_test_osc() {
 	static uint8_t dir = 1;
 
 	g_pwidth = dir ? g_pwidth + 200 : g_pwidth - 200;
-    dir = ((g_pwidth <= 200) || (g_pwidth >= 2000)) ? (dir^1) : dir;
+    dir = ((g_pwidth <= 200) || (g_pwidth >= 4000)) ? (dir^1) : dir;
 
     delay(1000);
+}
+
+// Called by HAL_ADC_IRQHandler
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+	int i;
+	char strbuf[10];
+
+	g_pwidth = 0;
+
+	for (i = 0; i < ADC_BUFFER_SIZE; i++) {
+		g_pwidth += g_ADCbuf[i];
+	}
+
+	g_pwidth = g_pwidth/ADC_BUFFER_SIZE;
+//	g_pwidth = HAL_ADC_GetValue(hadc);
+
+	sprintf(strbuf, "%ld\n", g_pwidth);
+
+	UART_Tx(strbuf);
 }
 
 int main(void) {
@@ -110,9 +132,9 @@ int main(void) {
 
   gpio_init_output(GPIO_TEST);
 
-  TIM3_start();
+  TIM3_start_IT();
   PWM_start();
-  ADC1_start();
+  ADC1_start_DMA(g_ADCbuf, ADC_BUFFER_SIZE);
 
   //g_pwidth = 200;
 
@@ -121,7 +143,7 @@ int main(void) {
   while (1) {
 
 	  //PWM_test_osc();
-	  ADC1_poll_test();
+	  //ADC1_poll_test();
 
 	  delay(5000000);
   }
@@ -183,7 +205,7 @@ static void MX_TIM3_Init(void) {
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = PERIOD_TIM3;
+  htim3.Init.Period = TIM3_PERIOD;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
