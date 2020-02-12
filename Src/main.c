@@ -1,4 +1,9 @@
-#include "string.h"
+#include <stdio.h>
+#include <string.h>
+
+#include "uart.h"
+#include "error.h"
+
 #include "main.h"
 
 #define PERIOD_40KHZ_TIM3 1350
@@ -6,29 +11,19 @@
 
 #define PWM_PRESCALE 0
 #define PWM_PWIDTH_11BIT_RES_X100 132
-#define PWM_PWIDTH_INIT 100
+#define PWM_PWIDTH_INIT 3
 #define PWM_PERIOD_40KHZ 5400
 #define PWM_PERIOD PWM_PERIOD_40KHZ
-
-#define UART_TIMEOUT 100
-
-#define GPIO_LED1 LED1_GPIO_Port, LED1_Pin
-#define GPIO_BTN1 USER_Btn_GPIO_Port, USER_Btn_Pin
-#define GPIO_TEST GPIOC, GPIO_PIN_8
-#define GPIO_PWM GPIOE, GPIO_PIN_5
 
 ADC_HandleTypeDef hadc1;
 
 TIM_HandleTypeDef htim3; // Handles 40KHz refresh
 TIM_HandleTypeDef htim9; // Handles PWM
 
-UART_HandleTypeDef huart3;
-
 static uint16_t g_pwidth = PWM_PWIDTH_INIT;
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART3_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM9_Init(void);
 static void MX_ADC1_Init(void);
@@ -73,6 +68,24 @@ void PWM_start() {
 	}
 }
 
+void ADC_start() {
+	HAL_ADC_Start(&hadc1);
+}
+
+void ADC_poll_test() {
+	uint32_t adcval;
+	char strbuf[20] = {0};
+
+	strcpy(strbuf, "adcval=");
+
+	if (HAL_ADC_PollForConversion(&hadc1, 1000000) == HAL_OK) {
+		adcval = HAL_ADC_GetValue(&hadc1);
+		sprintf(strbuf + 7, "%ld\n", adcval);
+
+		UART_Tx(strbuf);
+	}
+}
+
 void TIM3_start() {
     HAL_TIM_Base_Start_IT(&htim3);
 }
@@ -96,7 +109,7 @@ void PWM_test_osc() {
 	static uint8_t dir = 1;
 
 	g_pwidth = dir ? g_pwidth + 200 : g_pwidth - 200;
-    dir = ((g_pwidth == 200) || (g_pwidth == 2000)) ? (dir^1) : dir;
+    dir = ((g_pwidth <= 200) || (g_pwidth >= 2000)) ? (dir^1) : dir;
 
     delay(1000);
 }
@@ -108,26 +121,28 @@ int main(void) {
   SystemClock_Config();
 
   MX_GPIO_Init();
-  MX_USART3_UART_Init();
+  UART_init();
   MX_TIM3_Init();
   TIM3_Interrupt_Init();
   MX_TIM9_Init();
   MX_ADC1_Init();
 
   gpio_init_output(GPIO_TEST);
-  gpio_init_output(GPIO_LED1);
 
   TIM3_start();
   PWM_start();
+  ADC_start();
 
-  g_pwidth = 3;
+  //g_pwidth = 200;
 
   __enable_irq();
 
   while (1) {
-	  //HAL_UART_Transmit(&huart3, (uint8_t*)"Hello\n", 6, UART_TIMEOUT);
-	  //PWM_test_osc();
 
+	  //PWM_test_osc();
+	  ADC_poll_test();
+
+	  delay(5000000);
   }
 }
 
@@ -238,23 +253,6 @@ static void MX_TIM9_Init(void) {
   HAL_TIM_MspPostInit(&htim9);
 }
 
-static void MX_USART3_UART_Init(void) {
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
 static void MX_GPIO_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -291,28 +289,22 @@ static void MX_ADC1_Init(void) {
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.EOCSelection = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK) {
     Error_Handler();
   }
 
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
     Error_Handler();
   }
-}
-
-// Turns on LED1 if error occurs
-void Error_Handler(void)
-{
-  HAL_GPIO_WritePin(GPIO_LED1, 1);
 }
