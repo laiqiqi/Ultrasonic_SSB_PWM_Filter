@@ -27,7 +27,6 @@ static uint16_t g_pwidth = PWM_PWIDTH_INIT;
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-//static void MX_ETH_Init(void);
 static void MX_USART3_UART_Init(void);
 //static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM3_Init(void);
