@@ -11,6 +11,8 @@
 #include <string.h>
 #include "stm32f7xx_hal.h"
 
+#include "error.h"
+
 void UART_init();
 
 // accepts null terminated string

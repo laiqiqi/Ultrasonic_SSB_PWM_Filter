@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "adc.h"
 #include "uart.h"
 #include "error.h"
 
@@ -15,8 +16,6 @@
 #define PWM_PERIOD_40KHZ 5400
 #define PWM_PERIOD PWM_PERIOD_40KHZ
 
-ADC_HandleTypeDef hadc1;
-
 TIM_HandleTypeDef htim3; // Handles 40KHz refresh
 TIM_HandleTypeDef htim9; // Handles PWM
 
@@ -26,7 +25,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM9_Init(void);
-static void MX_ADC1_Init(void);
 
 //-------------------------------------
 // Assumes pwidth is an 11 bit number (0 to 2047)
@@ -68,24 +66,6 @@ void PWM_start() {
 	}
 }
 
-void ADC_start() {
-	HAL_ADC_Start(&hadc1);
-}
-
-void ADC_poll_test() {
-	uint32_t adcval;
-	char strbuf[20] = {0};
-
-	strcpy(strbuf, "adcval=");
-
-	if (HAL_ADC_PollForConversion(&hadc1, 1000000) == HAL_OK) {
-		adcval = HAL_ADC_GetValue(&hadc1);
-		sprintf(strbuf + 7, "%ld\n", adcval);
-
-		UART_Tx(strbuf);
-	}
-}
-
 void TIM3_start() {
     HAL_TIM_Base_Start_IT(&htim3);
 }
@@ -120,18 +100,19 @@ int main(void) {
   HAL_Init();
   SystemClock_Config();
 
-  MX_GPIO_Init();
   UART_init();
+  ADC1_init();
+
+  MX_GPIO_Init();
   MX_TIM3_Init();
   TIM3_Interrupt_Init();
   MX_TIM9_Init();
-  MX_ADC1_Init();
 
   gpio_init_output(GPIO_TEST);
 
   TIM3_start();
   PWM_start();
-  ADC_start();
+  ADC1_start();
 
   //g_pwidth = 200;
 
@@ -140,7 +121,7 @@ int main(void) {
   while (1) {
 
 	  //PWM_test_osc();
-	  ADC_poll_test();
+	  ADC1_poll_test();
 
 	  delay(5000000);
   }
@@ -280,31 +261,4 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-}
-
-static void MX_ADC1_Init(void) {
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = DISABLE;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK) {
-    Error_Handler();
-  }
-
-  sConfig.Channel = ADC_CHANNEL_0;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-    Error_Handler();
-  }
 }
