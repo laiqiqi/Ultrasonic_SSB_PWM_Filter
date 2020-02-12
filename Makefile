@@ -61,7 +61,9 @@ Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_uart_ex.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pcd.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pcd_ex.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_usb.c \
-Src/system_stm32f7xx.c
+Src/system_stm32f7xx.c \
+Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_adc.c \
+Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_adc_ex.c
 
 # ASM sources
 ASM_SOURCES =  \

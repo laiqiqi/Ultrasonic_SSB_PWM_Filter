@@ -1,3 +1,4 @@
+#include "string.h"
 #include "main.h"
 
 #define PERIOD_40KHZ_TIM3 1350
@@ -9,9 +10,13 @@
 #define PWM_PERIOD_40KHZ 5400
 #define PWM_PERIOD PWM_PERIOD_40KHZ
 
-#define GPIO_LED1 GPIOB, LD1_Pin
+#define UART_TIMEOUT 100
+
+#define GPIO_LED1 LD1_GPIO_Port, LD1_Pin
 #define GPIO_TEST GPIOC, GPIO_PIN_8
 #define GPIO_PWM GPIOE, GPIO_PIN_5
+
+ADC_HandleTypeDef hadc1;
 
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim9;
@@ -23,10 +28,11 @@ static uint16_t g_pwidth = PWM_PWIDTH_INIT;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 //static void MX_ETH_Init(void);
-//static void MX_USART3_UART_Init(void);
+static void MX_USART3_UART_Init(void);
 //static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM9_Init(void);
+static void MX_ADC1_Init(void);
 
 //-------------------------------------
 // Assumes pwidth is an 11 bit number (0 to 2047)
@@ -97,8 +103,7 @@ void PWM_test_osc() {
     delay(1000);
 }
 
-int main(void)
-{
+int main(void) {
   __disable_irq();
 
   HAL_Init();
@@ -106,12 +111,12 @@ int main(void)
 
   MX_GPIO_Init();
 //  MX_ETH_Init();
-//  MX_USART3_UART_Init();
+  MX_USART3_UART_Init();
 //  MX_USB_OTG_FS_PCD_Init();
   MX_TIM3_Init();
   TIM3_Interrupt_Init();
-
   MX_TIM9_Init();
+  MX_ADC1_Init();
 
   gpio_init_output(GPIO_TEST);
   gpio_init_output(GPIO_LED1);
@@ -123,16 +128,14 @@ int main(void)
 
   __enable_irq();
 
-  while (1)
-  {
-
+  while (1) {
+	  //HAL_UART_Transmit(&huart3, (uint8_t*)"Hello\n", 6, UART_TIMEOUT);
 	  //PWM_test_osc();
 
   }
 }
 
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void) {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 	  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
@@ -186,8 +189,7 @@ void SystemClock_Config(void)
 	  }
 }
 
-static void MX_TIM3_Init(void)
-{
+static void MX_TIM3_Init(void) {
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 //  TIM_OC_InitTypeDef sConfigOC = {0};
@@ -214,8 +216,7 @@ static void MX_TIM3_Init(void)
   }
 }
 
-static void MX_TIM9_Init(void)
-{
+static void MX_TIM9_Init(void) {
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
@@ -247,8 +248,7 @@ static void MX_TIM9_Init(void)
   HAL_TIM_MspPostInit(&htim9);
 }
 
-static void MX_USART3_UART_Init(void)
-{
+static void MX_USART3_UART_Init(void) {
   huart3.Instance = USART3;
   huart3.Init.BaudRate = 115200;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
@@ -265,8 +265,7 @@ static void MX_USART3_UART_Init(void)
   }
 }
 
-static void MX_GPIO_Init(void)
-{
+static void MX_GPIO_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
@@ -310,13 +309,36 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
-
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+static void MX_ADC1_Init(void) {
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK) {
+    Error_Handler();
+  }
+
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+}
+
+// Turns on LED1 if error occurs
 void Error_Handler(void)
 {
   HAL_GPIO_WritePin(GPIO_LED1, 1);
