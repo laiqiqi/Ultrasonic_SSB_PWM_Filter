@@ -1,5 +1,4 @@
 *.o
-Inc/*
 Drivers/*
 build/*
 .cproject
