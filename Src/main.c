@@ -12,14 +12,15 @@
 
 #define UART_TIMEOUT 100
 
-#define GPIO_LED1 LD1_GPIO_Port, LD1_Pin
+#define GPIO_LED1 LED1_GPIO_Port, LED1_Pin
+#define GPIO_BTN1 USER_Btn_GPIO_Port, USER_Btn_Pin
 #define GPIO_TEST GPIOC, GPIO_PIN_8
 #define GPIO_PWM GPIOE, GPIO_PIN_5
 
 ADC_HandleTypeDef hadc1;
 
-TIM_HandleTypeDef htim3;
-TIM_HandleTypeDef htim9;
+TIM_HandleTypeDef htim3; // Handles 40KHz refresh
+TIM_HandleTypeDef htim9; // Handles PWM
 
 UART_HandleTypeDef huart3;
 
@@ -28,7 +29,6 @@ static uint16_t g_pwidth = PWM_PWIDTH_INIT;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
-//static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM9_Init(void);
 static void MX_ADC1_Init(void);
@@ -74,12 +74,11 @@ void PWM_start() {
 }
 
 void TIM3_start() {
-//    __HAL_RCC_TIM3_CLK_ENABLE();
     HAL_TIM_Base_Start_IT(&htim3);
 }
 
+// Interrupt setup
 void TIM3_Interrupt_Init(void) {
-	//Interrupt setup
 	HAL_NVIC_SetPriority(TIM3_IRQn, 0, 1);
 	HAL_NVIC_EnableIRQ(TIM3_IRQn);
 }
@@ -109,9 +108,7 @@ int main(void) {
   SystemClock_Config();
 
   MX_GPIO_Init();
-//  MX_ETH_Init();
   MX_USART3_UART_Init();
-//  MX_USB_OTG_FS_PCD_Init();
   MX_TIM3_Init();
   TIM3_Interrupt_Init();
   MX_TIM9_Init();
@@ -139,15 +136,12 @@ void SystemClock_Config(void) {
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 	  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-	  /** Configure LSE Drive Capability
-	  */
+	  /** Configure LSE Drive Capability*/
 	  HAL_PWR_EnableBkUpAccess();
-	  /** Configure the main internal regulator output voltage
-	  */
+	  /** Configure the main internal regulator output voltage*/
 	  __HAL_RCC_PWR_CLK_ENABLE();
 	  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-	  /** Initializes the CPU, AHB and APB busses clocks
-	  */
+	  /** Initializes the CPU, AHB and APB busses clocks*/
 	  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
 	  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
 	  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -160,14 +154,12 @@ void SystemClock_Config(void) {
 	  {
 	    Error_Handler();
 	  }
-	  /** Activate the Over-Drive mode
-	  */
+	  /** Activate the Over-Drive mode*/
 	  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
 	  {
 	    Error_Handler();
 	  }
-	  /** Initializes the CPU, AHB and APB busses clocks
-	  */
+	  /** Initializes the CPU, AHB and APB busses clocks*/
 	  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
 	                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
 	  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -191,7 +183,6 @@ void SystemClock_Config(void) {
 static void MX_TIM3_Init(void) {
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-//  TIM_OC_InitTypeDef sConfigOC = {0};
 
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
@@ -273,15 +264,11 @@ static void MX_GPIO_Init(void) {
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
+//  __HAL_RCC_GPIOG_CLK_ENABLE();
+//  __HAL_RCC_GPIOH_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LED1_Pin|LED3_Pin|LED2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USER_Btn_Pin */
   GPIO_InitStruct.Pin = USER_Btn_Pin;
@@ -290,24 +277,11 @@ static void MX_GPIO_Init(void) {
   HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
+  GPIO_InitStruct.Pin = LED1_Pin|LED3_Pin|LED2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
-  GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_OverCurrent_Pin */
-  GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 }
 
 static void MX_ADC1_Init(void) {
