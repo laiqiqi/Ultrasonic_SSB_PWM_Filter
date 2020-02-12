@@ -1,0 +1,2 @@
+#!/bin/bash
+st-flash --serial /dev/ttyACM0 write ~/Documents/SSB_PWM_Signal_Generator/build/SSB_PWM_Signal_Generator.bin 0x8000000

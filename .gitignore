@@ -1,0 +1,9 @@
+*.o
+Inc/*
+Drivers/*
+build/*
+.cproject
+.project
+.mxproject
+.settings/*
+*.ioc
