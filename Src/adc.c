@@ -38,7 +38,7 @@ void ADC1_init(void) {
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK) {
     Error_Handler();
@@ -47,11 +47,12 @@ void ADC1_init(void) {
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC1_SAMPLING_TIME;
+  sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
     Error_Handler();
   }
 
-//  ADC1_interrupt_init();
+  //ADC1_interrupt_init();
 
   DMA_ADC1_init(&hadc1);
 }
