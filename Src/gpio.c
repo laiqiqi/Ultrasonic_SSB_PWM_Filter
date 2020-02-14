@@ -26,7 +26,7 @@ void GPIO_init(void) {
     //  __HAL_RCC_GPIOG_CLK_ENABLE();
     //  __HAL_RCC_GPIOH_CLK_ENABLE();
 
-    /*Configure GPIO pin Output Level */
+    /* Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOB, LED1_Pin|LED3_Pin|LED2_Pin, GPIO_PIN_RESET);
 
     // Init button

@@ -124,42 +124,14 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 */
 void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-
   if(hadc->Instance==ADC1) {
     /* Peripheral clock enable */
-    __HAL_RCC_ADC1_CLK_ENABLE();
+//    __HAL_RCC_ADC1_CLK_ENABLE();
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+//    __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC1 GPIO Configuration
     PA0/WKUP     ------> ADC1_IN0
     */
-    GPIO_InitStruct.Pin = ADC_IN_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(ADC_IN_GPIO_Port, &GPIO_InitStruct);
-
-    /* ADC1 DMA Init */
-    /* ADC1 Init */
-//    hdma_adc1.Instance = DMA2_Stream0;
-//    hdma_adc1.Init.Channel = DMA_CHANNEL_0;
-//    hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
-//    hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
-//    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
-//    hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-//    hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-//    hdma_adc1.Init.Mode = DMA_NORMAL;
-//    hdma_adc1.Init.Priority = DMA_PRIORITY_HIGH;
-//    hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
-//    hdma_adc1.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
-//    hdma_adc1.Init.MemBurst = DMA_MBURST_SINGLE;
-//    hdma_adc1.Init.PeriphBurst = DMA_PBURST_SINGLE;
-//    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
-//    {
-//      Error_Handler();
-//    }
-//
-//    __HAL_LINKDMA(hadc,DMA_Handle,hdma_adc1);
   }
 }
 

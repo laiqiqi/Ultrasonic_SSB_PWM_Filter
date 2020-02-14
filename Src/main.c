@@ -90,6 +90,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     }
 
     g_pwidth = pwidth_temp/ADC_BUFFER_SIZE;
+//
+//    sprintf(strbuf, "%ld\n", g_pwidth);
+//
+//    UART_Tx(strbuf);
 }
 
 int main(void) {

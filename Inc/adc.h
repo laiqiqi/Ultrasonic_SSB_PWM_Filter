@@ -14,7 +14,10 @@
 
 #include "dma.h"
 #include "uart.h"
+#include "gpio.h"
 #include "error.h"
+
+#include "main.h"
 
 #define ADC_BUFFER_SIZE 45
 

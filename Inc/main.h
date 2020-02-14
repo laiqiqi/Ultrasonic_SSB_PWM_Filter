@@ -35,6 +35,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 #define LED2_Pin GPIO_PIN_7
 #define LED2_GPIO_Port GPIOB
 
+#define GPIO_ADC_IN ADC_IN_GPIO_Port, ADC_IN_Pin
 #define GPIO_LED1 LED1_GPIO_Port, LED1_Pin
 #define GPIO_LED3 LED3_GPIO_Port, LED3_Pin
 #define GPIO_BTN1 USER_Btn_GPIO_Port, USER_Btn_Pin
