@@ -24,8 +24,10 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 #define STLK_RX_Pin GPIO_PIN_9
 #define USER_Btn_Pin GPIO_PIN_13
 #define USER_Btn_GPIO_Port GPIOC
-#define PWM_OUT_Pin GPIO_PIN_5
-#define PWM_OUT_GPIO_Port GPIOE
+#define PWM_OUT_00_Pin GPIO_PIN_5
+#define PWM_OUT_00_GPIO_Port GPIOE
+#define PWM_OUT_90_Pin GPIO_PIN_6
+#define PWM_OUT_90_GPIO_Port GPIOE
 #define ADC_IN_Pin GPIO_PIN_0
 #define ADC_IN_GPIO_Port GPIOA
 #define LED1_Pin GPIO_PIN_0
@@ -40,7 +42,9 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 #define GPIO_LED3 LED3_GPIO_Port, LED3_Pin
 #define GPIO_BTN1 USER_Btn_GPIO_Port, USER_Btn_Pin
 #define GPIO_TEST GPIOC, GPIO_PIN_8
-#define GPIO_PWM GPIOE, GPIO_PIN_5
+#define GPIO_PWM_OUT_00 PWM_OUT_00_Port, PWM_OUT_00_Pin
+#define GPIO_PWM_OUT_90 PWM_OUT_90_Port, PWM_OUT_90_Pin
+
 
 #ifdef __cplusplus
 }

@@ -6,6 +6,7 @@
 #include "adc.h"
 #include "sysclk.h"
 #include "uart.h"
+#include "hilbert.h"
 #include "error.h"
 
 #include "main.h"
@@ -19,35 +20,49 @@
 #define PWM_PERIOD_40KHZ 5400
 #define PWM_PERIOD PWM_PERIOD_40KHZ
 
+// Globals
 TIM_HandleTypeDef htim3; // Handles 40KHz refresh
 TIM_HandleTypeDef htim9; // Handles PWM
 
-static uint32_t g_pwidth = PWM_PWIDTH_INIT;
-
+static uint32_t g_pwidth_00 = PWM_PWIDTH_INIT;
+static uint32_t g_pwidth_90 = PWM_PWIDTH_INIT;
 static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
 
+static Hilbert_Buf g_hbuf;
+
+// Function Declarations
 static void MX_TIM3_Init(void);
 static void MX_TIM9_Init(void);
 
 //-------------------------------------
 // Assumes pwidth is a 12 bit number (0 to 4095)
-static void PWM_set_12bit(uint32_t pwidth) {
+static void PWM_set_12bit(uint32_t pwidth1, uint32_t pwidth2) {
     TIM_OC_InitTypeDef sConfigOC;
-    uint32_t new_pwidth = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth)/1000;
+    uint32_t new_pwidth1, new_pwidth2; 
+
+    new_pwidth1 = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth1)/1000;
+    new_pwidth2 = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth2)/1000;
 
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = new_pwidth;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
 
+    sConfigOC.Pulse = new_pwidth1;
     HAL_TIM_PWM_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
+
+    sConfigOC.Pulse = new_pwidth2;
+    HAL_TIM_PWM_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_2);
 }
 
 void PWM_start() {
 //	 __HAL_RCC_TIM9_CLK_ENABLE();
     //HAL_TIM_Base_Start(&htim9);
     if (HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_2) != HAL_OK) {
         Error_Handler();
     }
 }
@@ -66,7 +81,7 @@ void TIM3_Interrupt_Init(void) {
 void TIM3_IRQHandler(void) {
     __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
 
-    PWM_set_12bit(g_pwidth);
+    PWM_set_12bit(g_pwidth_00, g_pwidth_90);
 
     //	HAL_GPIO_TogglePin(GPIO_LED1);
 }
@@ -74,8 +89,8 @@ void TIM3_IRQHandler(void) {
 void PWM_test_osc() {
 	static uint8_t dir = 1;
 
-	g_pwidth = dir ? g_pwidth + 200 : g_pwidth - 200;
-    dir = ((g_pwidth <= 200) || (g_pwidth >= 4000)) ? (dir^1) : dir;
+	g_pwidth_00 = dir ? g_pwidth_00 + 200 : g_pwidth_00 - 200;
+    dir = ((g_pwidth_00 <= 200) || (g_pwidth_00 >= 4000)) ? (dir^1) : dir;
 
     delay(1000);
 }
@@ -89,11 +104,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
         pwidth_temp += g_ADCbuf[i];
     }
 
-    g_pwidth = pwidth_temp/ADC_BUFFER_SIZE;
-//
-//    sprintf(strbuf, "%ld\n", g_pwidth);
-//
-//    UART_Tx(strbuf);
+    // get average value in 1/40kHz window
+    pwidth_temp = pwidth_temp/ADC_BUFFER_SIZE;
+
+    // buffer value and calculate the hilbert outputs
+    hilbert_record(&g_hbuf, pwidth_temp);
+    g_pwidth_90 = hilbert_phase_90_12bit(&g_hbuf);
+    g_pwidth_00 = hilbert_phase_0_12bit(&g_hbuf);
+
+    char strbuf[1000];
+
+    sprintf(strbuf, "%ld,%ld\n", g_pwidth_00, g_pwidth_90);
+    UART_Tx(strbuf);
 //    HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
@@ -116,6 +138,8 @@ int main(void) {
     TIM3_start_IT();
     PWM_start();
     ADC1_start_DMA(g_ADCbuf, ADC_BUFFER_SIZE);
+
+    init_Hilbert_Buf(&g_hbuf);
 
     //g_pwidth = 200;
 
@@ -181,6 +205,9 @@ static void MX_TIM9_Init(void) {
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
     if (HAL_TIM_PWM_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_PWM_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
         Error_Handler();
     }
 
