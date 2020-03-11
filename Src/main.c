@@ -94,6 +94,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 //    sprintf(strbuf, "%ld\n", g_pwidth);
 //
 //    UART_Tx(strbuf);
+//    HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
 int main(void) {

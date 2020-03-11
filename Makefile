@@ -68,7 +68,8 @@ Src/sysclk.c \
 Src/adc.c \
 Src/uart.c \
 Src/dma.c \
-Src/error.c
+Src/error.c \
+Src/hilbert.c
 
 # ASM sources
 ASM_SOURCES =  \

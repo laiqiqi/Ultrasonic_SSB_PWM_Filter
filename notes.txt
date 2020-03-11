@@ -1,0 +1,3 @@
+ - ADC sampling time is a bit faster than expected (by about 2khz or more) and drifts over time
+	- do calculation again
+	- may want have DMA continuous in background and perform pwidth averaging based on 40kHz timer
