@@ -54,7 +54,7 @@ void ADC1_init(void) {
     GPIO_init_pin(GPIO_ADC_IN, GPIO_MODE_ANALOG, GPIO_NOPULL); // Initialize ADC Input Pin
 
     hadc1.Instance = ADC1;
-    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
     hadc1.Init.Resolution = ADC_RESOLUTION_12B;
     hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
     hadc1.Init.ContinuousConvMode = ENABLE;
