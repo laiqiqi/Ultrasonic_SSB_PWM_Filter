@@ -51,7 +51,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF3_TIM9;
-    HAL_GPIO_Init(PWM_OUT_00_Piort, &GPIO_InitStruct);
+    HAL_GPIO_Init(PWM_OUT_00_Port, &GPIO_InitStruct);
   }
 }
 /**

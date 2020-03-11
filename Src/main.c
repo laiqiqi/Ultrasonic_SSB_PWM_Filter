@@ -26,6 +26,7 @@ TIM_HandleTypeDef htim9; // Handles PWM
 
 static uint32_t g_pwidth_00 = PWM_PWIDTH_INIT;
 static uint32_t g_pwidth_90 = PWM_PWIDTH_INIT;
+
 static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
 
 static Hilbert_Buf g_hbuf;
