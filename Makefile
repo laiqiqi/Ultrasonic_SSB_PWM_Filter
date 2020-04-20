@@ -36,40 +36,40 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Src/main.c \
-Src/stm32f7xx_it.c \
-Src/stm32f7xx_hal_msp.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_adc.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_adc_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_cortex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_rcc.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_rcc_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_flash.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_flash_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_gpio.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_dma.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_dma_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pwr.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pwr_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_i2c.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_i2c_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_exti.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_tim.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_tim_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_uart.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_uart_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pcd.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pcd_ex.c \
-Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_usb.c \
-Src/system_stm32f7xx.c \
-Src/gpio.c \
-Src/sysclk.c \
-Src/adc.c \
-Src/uart.c \
-Src/dma.c \
-Src/error.c \
-Src/hilbert.c
+src/main.c \
+src/stm32f7xx_it.c \
+src/stm32f7xx_hal_msp.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_adc.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_adc_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_cortex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_rcc.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_rcc_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_flash.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_flash_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_gpio.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_dma.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_dma_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_pwr.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_pwr_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_i2c.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_i2c_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_exti.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_tim.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_tim_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_uart.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_uart_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_pcd.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_pcd_ex.c \
+Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_ll_usb.c \
+src/system_stm32f7xx.c \
+src/gpio.c \
+src/sysclk.c \
+src/adc.c \
+src/uart.c \
+src/dma.c \
+src/error.c \
+src/hilbert.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -127,9 +127,9 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
--IInc \
--IDrivers/STM32F7xx_HAL_Driver/Inc \
--IDrivers/STM32F7xx_HAL_Driver/Inc/Legacy \
+-Iinc \
+-IDrivers/STM32F7xx_HAL_Driver/inc \
+-IDrivers/STM32F7xx_HAL_Driver/inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F7xx/Include \
 -IDrivers/CMSIS/Include
 
