@@ -49,6 +49,8 @@ Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_flash_ex.c \
 Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_gpio.c \
 Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_dma.c \
 Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_dma_ex.c \
+Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_dac.c \
+Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_dac_ex.c \
 Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_pwr.c \
 Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal_pwr_ex.c \
 Drivers/STM32F7xx_HAL_Driver/src/stm32f7xx_hal.c \
@@ -66,6 +68,7 @@ src/system_stm32f7xx.c \
 src/gpio.c \
 src/sysclk.c \
 src/adc.c \
+src/dac.c\
 src/uart.c \
 src/dma.c \
 src/error.c \

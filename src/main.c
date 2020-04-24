@@ -4,6 +4,7 @@
 #include "dma.h"
 #include "gpio.h"
 #include "adc.h"
+#include "dac.h"
 #include "sysclk.h"
 #include "uart.h"
 #include "hilbert.h"
@@ -110,13 +111,19 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 
     // buffer value and calculate the hilbert outputs
     hilbert_record(&g_hbuf, pwidth_temp);
-    g_pwidth_90 = hilbert_phase_90_12bit(&g_hbuf);
     g_pwidth_00 = hilbert_phase_0_12bit(&g_hbuf);
+    g_pwidth_90 = hilbert_phase_90_12bit(&g_hbuf);
 
-    char strbuf[1000];
+    // Output to DAC for Testing
+    DAC_set_channel_value(DAC_CHANNEL_00, g_pwidth_00);
+    DAC_set_channel_value(DAC_CHANNEL_90, g_pwidth_90);
 
-    sprintf(strbuf, "%ld,%ld\n", g_pwidth_00, g_pwidth_90);
-    UART_Tx(strbuf);
+    // UART output for testing
+//    char strbuf[1000];
+//    sprintf(strbuf, "%ld,%ld\n", g_pwidth_00, g_pwidth_90);
+//    UART_Tx(strbuf);
+
+    // GPIO toggle for testing
 //    HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
@@ -129,6 +136,7 @@ int main(void) {
     GPIO_init();
     UART_init();
     ADC1_init();
+    DAC_init();
 
     MX_TIM3_Init();
     TIM3_Interrupt_Init();
@@ -139,6 +147,7 @@ int main(void) {
     TIM3_start_IT();
     PWM_start();
     ADC1_start_DMA(g_ADCbuf, ADC_BUFFER_SIZE);
+    DAC_start();
 
     init_Hilbert_Buf(&g_hbuf);
 

@@ -38,7 +38,7 @@ uint32_t hilbert_phase_90_12bit(Hilbert_Buf* hbuf) {
     if (hval < 0)
         return 0;
     if (hval > 4095)
-        return 4065;
+        return 4095;
 
     return (uint32_t)hval;
 }
