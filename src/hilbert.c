@@ -33,7 +33,7 @@ uint32_t hilbert_phase_90_12bit(Hilbert_Buf* hbuf) {
         hptr = NEXT_ENTRY(hbuf, hptr);
     }
     
-    hval = (hval/HILBERT_CORRECTION) + 2047;
+    hval = (hval/HILBERT_COEFF_CORRECTION) + 2047 + HILBERT_DC_OFFSET_CORRECTION;
 
     if (hval < 0)
         return 0;

@@ -12,6 +12,8 @@
 
 #include "main.h"
 
+#define DAC_TEST // If defined, outputs 00 and 90 phase signals to DAC
+
 #define TIM3_PERIOD_40KHZ 1350
 #define TIM3_PERIOD TIM3_PERIOD_40KHZ
 
@@ -22,15 +24,15 @@
 #define PWM_PERIOD PWM_PERIOD_40KHZ
 
 // Globals
-TIM_HandleTypeDef htim3; // Handles 40KHz refresh
-TIM_HandleTypeDef htim9; // Handles PWM
+TIM_HandleTypeDef htim3 = {0}; // Handles 40KHz refresh
+TIM_HandleTypeDef htim9 = {0}; // Handles PWM
 
 static uint32_t g_pwidth_00 = PWM_PWIDTH_INIT;
 static uint32_t g_pwidth_90 = PWM_PWIDTH_INIT;
 
-static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
+static uint32_t g_ADCbuf[ADC_BUFFER_SIZE] = {0};
 
-static Hilbert_Buf g_hbuf;
+static Hilbert_Buf g_hbuf = {0};
 
 // Function Declarations
 static void MX_TIM3_Init(void);
@@ -81,11 +83,13 @@ void TIM3_Interrupt_Init(void) {
 
 // Runs @ 40KHz (theoretically)
 void TIM3_IRQHandler(void) {
+//    __HAL_TIM_CLEAR_FLAG()
     __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
 
     PWM_set_12bit(g_pwidth_00, g_pwidth_90);
 
     //	HAL_GPIO_TogglePin(GPIO_LED1);
+    HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
 void PWM_test_osc() {
@@ -114,9 +118,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     g_pwidth_00 = hilbert_phase_0_12bit(&g_hbuf);
     g_pwidth_90 = hilbert_phase_90_12bit(&g_hbuf);
 
+#ifdef DAC_TEST
     // Output to DAC for Testing
     DAC_set_channel_value(DAC_CHANNEL_00, g_pwidth_00);
     DAC_set_channel_value(DAC_CHANNEL_90, g_pwidth_90);
+#endif
 
     // UART output for testing
 //    char strbuf[1000];
@@ -124,7 +130,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 //    UART_Tx(strbuf);
 
     // GPIO toggle for testing
-//    HAL_GPIO_TogglePin(GPIO_TEST);
+    //HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
 int main(void) {
@@ -136,7 +142,10 @@ int main(void) {
     GPIO_init();
     UART_init();
     ADC1_init();
+
+#ifdef DAC_TEST
     DAC_init();
+#endif
 
     MX_TIM3_Init();
     TIM3_Interrupt_Init();

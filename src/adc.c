@@ -7,7 +7,7 @@
 
 #include "adc.h"
 
-ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc1 = {0};
 
 #define ADC1_SAMPLING_TIME ADC_SAMPLETIME_15CYCLES
 

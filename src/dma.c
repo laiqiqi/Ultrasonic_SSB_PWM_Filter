@@ -1,7 +1,7 @@
 #include "dma.h"
 #include "main.h"
 
-DMA_HandleTypeDef hdma_adc1;
+DMA_HandleTypeDef hdma_adc1 = {0};
 
 void DMA2_Stream0_IRQHandler() {
 	HAL_DMA_IRQHandler(&hdma_adc1);

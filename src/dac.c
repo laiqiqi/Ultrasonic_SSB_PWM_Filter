@@ -1,6 +1,6 @@
 #include "dac.h"
 
-DAC_HandleTypeDef hdac;
+DAC_HandleTypeDef hdac = {0};
 
 void DAC_init(void) {
   DAC_ChannelConfTypeDef sConfig = {0};
@@ -11,6 +11,8 @@ void DAC_init(void) {
     Error_Handler();
 
   sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+
+  // Sets Output Buffer state (used to reduce output impedance
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
 
   if (HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_00) != HAL_OK)

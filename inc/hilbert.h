@@ -4,7 +4,8 @@
 #include <stdint.h>
 
 #define HILBERT_BUF_SIZE 41
-#define HILBERT_CORRECTION 10000
+#define HILBERT_COEFF_CORRECTION 10000
+#define HILBERT_DC_OFFSET_CORRECTION (-500)
 
 typedef struct Hilbert_Buf {
     uint32_t* first; // will point to the first value added to the buffer
