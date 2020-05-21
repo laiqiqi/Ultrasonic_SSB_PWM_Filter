@@ -19,7 +19,8 @@
 
 #include "main.h"
 
-#define ADC_BUFFER_SIZE 45
+#define ADC_BUFFER_SIZE 50
+#define ADC_BUFFER_HALF_SIZE 25
 
 void ADC1_init();
 void ADC1_start_DMA(uint32_t*, uint32_t);

@@ -27,10 +27,11 @@
 TIM_HandleTypeDef htim3 = {0}; // Handles 40KHz refresh
 TIM_HandleTypeDef htim9 = {0}; // Handles PWM
 
+static uint32_t g_pwidth_temp = 0;
 static uint32_t g_pwidth_00 = PWM_PWIDTH_INIT;
 static uint32_t g_pwidth_90 = PWM_PWIDTH_INIT;
 
-static uint32_t g_ADCbuf[ADC_BUFFER_SIZE] = {0};
+static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
 
 static Hilbert_Buf g_hbuf = {0};
 
@@ -101,20 +102,34 @@ void PWM_test_osc() {
     delay(1000);
 }
 
+// Called when ADC buffer is half full
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
+    int i;
+
+    // reset pwidth temp
+    g_pwidth_temp = 0;
+
+    // finds sum of first half of buffer (index 0 - 21)
+    for (i = 0; i < ADC_BUFFER_HALF_SIZE; i++) {
+        g_pwidth_temp += g_ADCbuf[i];
+    }
+}
+
+// Called when ADC buffer is full
 // Called by HAL_ADC_IRQHandler
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     int i;
-    uint32_t pwidth_temp = 0;
 
-    for (i = 0; i < ADC_BUFFER_SIZE; i++) {
-        pwidth_temp += g_ADCbuf[i];
+    // adds sum of first to sum of second half of buffer (index 22 - 44)
+    for (i = ADC_BUFFER_HALF_SIZE; i < ADC_BUFFER_SIZE; i++) {
+        g_pwidth_temp += g_ADCbuf[i];
     }
 
     // get average value in 1/40kHz window
-    pwidth_temp = pwidth_temp/ADC_BUFFER_SIZE;
+    g_pwidth_temp = g_pwidth_temp/ADC_BUFFER_SIZE;
 
     // buffer value and calculate the hilbert outputs
-    hilbert_record(&g_hbuf, pwidth_temp);
+    hilbert_record(&g_hbuf, g_pwidth_temp);
     g_pwidth_00 = hilbert_phase_0_12bit(&g_hbuf);
     g_pwidth_90 = hilbert_phase_90_12bit(&g_hbuf);
 
@@ -130,7 +145,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 //    UART_Tx(strbuf);
 
     // GPIO toggle for testing
-    //HAL_GPIO_TogglePin(GPIO_TEST);
+    HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
 int main(void) {
@@ -147,18 +162,18 @@ int main(void) {
     DAC_init();
 #endif
 
-    MX_TIM3_Init();
+    //MX_TIM3_Init();
     TIM3_Interrupt_Init();
     MX_TIM9_Init();
 
+    init_Hilbert_Buf(&g_hbuf);
+
     GPIO_init_pin(GPIO_TEST, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL);
 
-    TIM3_start_IT();
+    //TIM3_start_IT();
     PWM_start();
     ADC1_start_DMA(g_ADCbuf, ADC_BUFFER_SIZE);
     DAC_start();
-
-    init_Hilbert_Buf(&g_hbuf);
 
     //g_pwidth = 200;
 
