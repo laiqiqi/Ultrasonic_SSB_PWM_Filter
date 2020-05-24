@@ -72,7 +72,8 @@ src/dac.c\
 src/uart.c \
 src/dma.c \
 src/error.c \
-src/hilbert.c
+src/hilbert.c \
+src/pwm.c
 
 # ASM sources
 ASM_SOURCES =  \

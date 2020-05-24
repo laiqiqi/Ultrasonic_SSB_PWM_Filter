@@ -21,40 +21,6 @@ void HAL_MspInit(void)
 }
 
 /**
-* @brief TIM_Base MSP Initialization
-* This function configures the hardware resources used in this example
-* @param htim_base: TIM_Base handle pointer
-* @retval None
-*/
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
-{
-  if(htim_base->Instance==TIM3) {
-    __HAL_RCC_TIM3_CLK_ENABLE();
-  }
-  else if(htim_base->Instance==TIM9) {
-      __HAL_RCC_TIM9_CLK_ENABLE();
-  }
-}
-
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(htim->Instance==TIM3) {
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-  }
-
-  if(htim->Instance==TIM9) {
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-
-    GPIO_InitStruct.Pin = PWM_OUT_00_Pin | PWM_OUT_90_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF3_TIM9;
-    HAL_GPIO_Init(PWM_OUT_00_Port, &GPIO_InitStruct);
-  }
-}
-/**
 * @brief TIM_Base MSP De-Initialization
 * This function freeze the hardware resources used in this example
 * @param htim_base: TIM_Base handle pointer
@@ -65,8 +31,8 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
   if(htim_base->Instance==TIM3) {
     __HAL_RCC_TIM3_CLK_DISABLE();
   }
-  else if(htim_base->Instance==TIM9) {
-    __HAL_RCC_TIM9_CLK_DISABLE();
+  else if(htim_base->Instance==TIM1) {
+    __HAL_RCC_TIM1_CLK_DISABLE();
   }
 }
 
