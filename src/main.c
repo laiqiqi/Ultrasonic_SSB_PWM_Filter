@@ -39,18 +39,18 @@ static void PWM_set_12bit(uint32_t pwidth1, uint32_t pwidth2) {
     new_pwidth1 = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth1)/1000;
     new_pwidth2 = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth2)/1000;
 
-    PWM_asym_config(&htim1, new_pwidth1, TIM_CHANNEL_1, PWM_PHASE_00, TIM_CHANNEL_2);
+    PWM_config(&htim1, new_pwidth1, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 
-    PWM_asym_config(&htim1, new_pwidth2, TIM_CHANNEL_3, PWM_PHASE_90, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+    PWM_config(&htim9, new_pwidth2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
 }
 
 // Runs @ 40KHz (theoretically)
 void TIM3_IRQHandler(void) {
     __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
 
-    // PWM_set_12bit(g_pwidth_00, g_pwidth_90); TODO set back
+    PWM_set_12bit(g_pwidth_00, g_pwidth_90);
 
     // HAL_GPIO_TogglePin(GPIO_LED1);
     // HAL_GPIO_TogglePin(GPIO_TEST);
@@ -69,8 +69,7 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
     }
 }
 
-// Called when ADC buffer is full
-// Called by HAL_ADC_IRQHandler
+// Called by HAL_ADC_IRQHandler when ADC buffer is full
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     int i;
 

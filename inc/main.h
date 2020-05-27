@@ -22,24 +22,31 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* Private defines -----------------------------------------------------------*/
 #define STLK_TX_Pin GPIO_PIN_8
 #define STLK_RX_Pin GPIO_PIN_9
-#define USER_Btn_Pin GPIO_PIN_13
+
 #define USER_Btn_GPIO_Port GPIOC
-#define PWM_OUT_00_Pin GPIO_PIN_9
+#define USER_Btn_Pin GPIO_PIN_13
+
 #define PWM_OUT_00_Port GPIOE
-#define PWM_OUT_90_Pin GPIO_PIN_12
-#define PWM_OUT_90_Port GPIOD
-#define ADC_IN_Pin GPIO_PIN_0
+#define PWM_OUT_00_Pin GPIO_PIN_9
+#define PWM_OUT_90_Port GPIOE
+#define PWM_OUT_90_Pin GPIO_PIN_5
+
 #define ADC_IN_GPIO_Port GPIOA
-#define DAC1_OUT_Pin GPIO_PIN_4
+#define ADC_IN_Pin GPIO_PIN_0
+
 #define DAC1_OUT_Port GPIOA
-#define DAC2_OUT_Pin GPIO_PIN_5
+#define DAC1_OUT_Pin GPIO_PIN_4
+
 #define DAC2_OUT_Port GPIOA
-#define LED1_Pin GPIO_PIN_0
+#define DAC2_OUT_Pin GPIO_PIN_5
+
 #define LED1_GPIO_Port GPIOB
-#define LED3_Pin GPIO_PIN_14
+#define LED1_Pin GPIO_PIN_0
 #define LED3_GPIO_Port GPIOB
-#define LED2_Pin GPIO_PIN_7
+#define LED3_Pin GPIO_PIN_14
 #define LED2_GPIO_Port GPIOB
+#define LED2_Pin GPIO_PIN_7
+
 
 #define GPIO_ADC_IN ADC_IN_GPIO_Port, ADC_IN_Pin
 #define GPIO_DAC1_OUT DAC1_OUT_GPIO_Port, DAC1_OUT_Pin

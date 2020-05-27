@@ -1,5 +1,7 @@
 #include "pwm.h"
 
+#include "sysclk.h"
+
 void PWM_config(TIM_HandleTypeDef* htim, uint32_t pulse, uint32_t channel) {
     TIM_OC_InitTypeDef sConfigOC = {0};
 
