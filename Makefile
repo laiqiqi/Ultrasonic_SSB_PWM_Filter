@@ -73,6 +73,7 @@ src/uart.c \
 src/dma.c \
 src/error.c \
 src/hilbert.c \
+src/tim.c \
 src/pwm.c
 
 # ASM sources

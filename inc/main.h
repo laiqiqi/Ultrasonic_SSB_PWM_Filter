@@ -51,7 +51,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 #define GPIO_PWM_OUT_00 PWM_OUT_00_Port, PWM_OUT_00_Pin
 #define GPIO_PWM_OUT_90 PWM_OUT_90_Port, PWM_OUT_90_Pin
 
-
 #ifdef __cplusplus
 }
 #endif
