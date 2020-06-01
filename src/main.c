@@ -14,7 +14,7 @@
 
 #include "main.h"
 
-#define DAC_TEST // If defined, outputs 00 and 90 phase signals to DAC
+//#define DAC_TEST // If defined, outputs 00 and 90 phase signals to DAC
 
 // Globals
 TIM_HandleTypeDef htim3 = {0}; // Handles 40KHz refresh
@@ -23,8 +23,8 @@ TIM_HandleTypeDef htim1 = {0}; // Handles PWM
 TIM_HandleTypeDef htim9 = {0};
 
 static uint32_t g_pwidth_temp = 0;
-static uint32_t g_pwidth_00 = PWM_PWIDTH_INIT;
-static uint32_t g_pwidth_90 = PWM_PWIDTH_INIT;
+static uint32_t g_pwidth_h90_pwm00 = PWM_PWIDTH_INIT;
+static uint32_t g_pwidth_h00_pwm90 = PWM_PWIDTH_INIT;
 
 static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
 
@@ -50,7 +50,7 @@ static void PWM_set_12bit(uint32_t pwidth1, uint32_t pwidth2) {
 void TIM3_IRQHandler(void) {
     __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
 
-    PWM_set_12bit(g_pwidth_00, g_pwidth_90);
+    PWM_set_12bit(g_pwidth_h90_pwm00, g_pwidth_h00_pwm90);
 
     // HAL_GPIO_TogglePin(GPIO_LED1);
     // HAL_GPIO_TogglePin(GPIO_TEST);
@@ -83,13 +83,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 
     // buffer value and calculate the hilbert outputs
     hilbert_record(&g_hbuf, g_pwidth_temp);
-    g_pwidth_00 = hilbert_phase_0_12bit(&g_hbuf);
-    g_pwidth_90 = hilbert_phase_90_12bit(&g_hbuf);
+    g_pwidth_h00_pwm90 = hilbert_phase_00_12bit(&g_hbuf);
+    g_pwidth_h90_pwm00 = hilbert_phase_90_12bit(&g_hbuf);
 
 #ifdef DAC_TEST
     // Output to DAC for Testing
-    DAC_set_channel_value(DAC_CHANNEL_00, g_pwidth_00);
-    DAC_set_channel_value(DAC_CHANNEL_90, g_pwidth_90);
+    DAC_set_channel_value(DAC_CHANNEL_00, g_pwidth_h00_pwm90);
+    DAC_set_channel_value(DAC_CHANNEL_90, g_pwidth_h90_pwm00);
 #endif
 
     // UART output for testing

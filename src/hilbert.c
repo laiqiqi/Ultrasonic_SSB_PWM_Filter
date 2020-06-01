@@ -13,14 +13,14 @@ void init_Hilbert_Buf(Hilbert_Buf* hbuf) {
     }
 
     hbuf->first = hbuf->buf;
-    hbuf->phase_0 = hbuf->buf + PHASE_0_OFFSET;
+    hbuf->phase_00 = hbuf->buf + PHASE_0_OFFSET;
 }
 
 void hilbert_record(Hilbert_Buf* hbuf, uint32_t adc_val) {
     *hbuf->first = adc_val;
     
     hbuf->first = NEXT_ENTRY(hbuf, hbuf->first);
-    hbuf->phase_0 = NEXT_ENTRY(hbuf, hbuf->phase_0);
+    hbuf->phase_00 = NEXT_ENTRY(hbuf, hbuf->phase_00);
 }
 
 uint32_t hilbert_phase_90_12bit(Hilbert_Buf* hbuf) {
@@ -33,7 +33,7 @@ uint32_t hilbert_phase_90_12bit(Hilbert_Buf* hbuf) {
         hptr = NEXT_ENTRY(hbuf, hptr);
     }
     
-    hval = (hval/HILBERT_COEFF_CORRECTION) + 2047 + HILBERT_DC_OFFSET_CORRECTION;
+    hval = (hval/HILBERT_COEFF_CORRECTION) + 2047 /* HILBERT_DC_OFFSET_CORRECTION*/;
 
     if (hval < 0)
         return 0;
@@ -43,7 +43,7 @@ uint32_t hilbert_phase_90_12bit(Hilbert_Buf* hbuf) {
     return (uint32_t)hval;
 }
 
-uint32_t hilbert_phase_0_12bit(Hilbert_Buf* hbuf) {
-    return *hbuf->phase_0;
+uint32_t hilbert_phase_00_12bit(Hilbert_Buf* hbuf) {
+    return *hbuf->phase_00;
 }
 
