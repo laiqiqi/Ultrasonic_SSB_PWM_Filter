@@ -14,7 +14,10 @@
 
 #include "main.h"
 
+// Enables certain modules for testing
+#define GPIO_T_TEST
 //#define DAC_TEST // If defined, outputs 00 and 90 phase signals to DAC
+//#define UART_TEST
 
 // Globals
 TIM_HandleTypeDef htim3 = {0}; // Handles 40KHz refresh
@@ -51,9 +54,6 @@ void TIM3_IRQHandler(void) {
     __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
 
     PWM_set_12bit(g_pwidth_h90_pwm00, g_pwidth_h00_pwm90);
-
-    // HAL_GPIO_TogglePin(GPIO_LED1);
-    // HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
 // Called when ADC buffer is half full
@@ -73,6 +73,11 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     int i;
 
+#ifdef GPIO_T_TEST
+    // GPIO toggle for testing
+    HAL_GPIO_TogglePin(GPIO_TEST);
+#endif
+
     // adds sum of first to sum of second half of buffer (index 22 - 44)
     for (i = ADC_BUFFER_HALF_SIZE; i < ADC_BUFFER_SIZE; i++) {
         g_pwidth_temp += g_ADCbuf[i];
@@ -91,14 +96,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     DAC_set_channel_value(DAC_CHANNEL_00, g_pwidth_h00_pwm90);
     DAC_set_channel_value(DAC_CHANNEL_90, g_pwidth_h90_pwm00);
 #endif
-
-    // UART output for testing
-//    char strbuf[1000];
-//    sprintf(strbuf, "%ld,%ld\n", g_pwidth_00, g_pwidth_90);
-//    UART_Tx(strbuf);
-
-    // GPIO toggle for testing
-    HAL_GPIO_TogglePin(GPIO_TEST);
 }
 
 int main(void) {
@@ -110,9 +107,11 @@ int main(void) {
 
     // Project Initialization
     GPIO_init();
-    UART_init();
     ADC1_init();
 
+#ifdef UART_TEST
+    UART_init();
+#endif
 #ifdef DAC_TEST
     DAC_init();
 #endif
@@ -125,7 +124,9 @@ int main(void) {
 
     init_Hilbert_Buf(&g_hbuf);
 
+#ifdef GPIO_T_TEST
     GPIO_init_pin(GPIO_TEST, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL);
+#endif
 
     // Start
     TIM3_start_IT(&htim3);
@@ -136,9 +137,6 @@ int main(void) {
     __enable_irq();
 
     while (1) {
-        //PWM_test_osc();
-        //ADC1_poll_test();
-
         delay(5000000);
     }
 }
