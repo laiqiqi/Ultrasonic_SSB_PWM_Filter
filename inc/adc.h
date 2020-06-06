@@ -1,10 +1,3 @@
-/*
- * adc.h
- *
- *  Created on: Feb 12, 2020
- *      Author: rstatz
- */
-
 #ifndef INC_ADC_H_
 #define INC_ADC_H_
 
@@ -27,4 +20,4 @@ void ADC1_start_DMA(uint32_t*, uint32_t);
 
 void ADC1_poll_test();
 
-#endif /* INC_ADC_H_ */
+#endif

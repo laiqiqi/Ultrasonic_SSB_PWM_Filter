@@ -7,9 +7,23 @@
 
 #include "adc.h"
 
+#include "event_loop.h"
+
+extern uint32_t g_events;
+
 ADC_HandleTypeDef hadc1 = {0};
 
 #define ADC1_SAMPLING_TIME ADC_SAMPLETIME_15CYCLES
+
+// Called when ADC buffer is half full
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
+    SET_EVENT(&g_events, EVENT_ADC_AVG_HALF);
+}
+
+// Called by HAL_ADC_IRQHandler when ADC buffer is full
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+    SET_EVENT(&g_events, EVENT_ADC_AVG_FULL);
+}
 
 void ADC_IRQHandler() {
     HAL_ADC_IRQHandler(&hadc1);
@@ -80,8 +94,6 @@ void ADC1_init(void) {
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
     }
-
-    //ADC1_interrupt_init();
 
     // Initialize DMA
     DMA_ADC1_init(&hadc1);

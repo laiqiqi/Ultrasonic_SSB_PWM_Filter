@@ -1,6 +1,10 @@
 #include "pwm.h"
 
 #include "sysclk.h"
+#include "tim.h"
+
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim9;
 
 void PWM_config(TIM_HandleTypeDef* htim, uint32_t pulse, uint32_t channel) {
     TIM_OC_InitTypeDef sConfigOC = {0};
@@ -39,6 +43,21 @@ void PWM_test_osc(uint32_t* g_pwidth_00) {
 
 //****************************
 // Project Specific Functions
+
+// Assumes pwidth is a 12 bit number (0 to 4095)
+void PWM_set_12bit(uint32_t hilbert_90, uint32_t hilbert_00) {
+    uint32_t pwidth1, pwidth2;
+
+    // Convert 12bit number to PWM pulse width
+    pwidth1 = (PWM_PWIDTH_12BIT_RES_X1000 * hilbert_90)/1000;
+    pwidth2 = (PWM_PWIDTH_12BIT_RES_X1000 * hilbert_00)/1000;
+
+    PWM_config(&htim1, pwidth1, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+
+    PWM_config(&htim9, pwidth2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
+}
 
 void PWM_start(TIM_HandleTypeDef* htim_00, TIM_HandleTypeDef* htim_90) {
     HAL_TIM_PWM_Start(htim_00, TIM_CHANNEL_1);

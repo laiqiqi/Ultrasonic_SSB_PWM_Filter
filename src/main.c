@@ -11,53 +11,43 @@
 #include "sysclk.h"
 #include "tim.h"
 #include "uart.h"
+#include "event_loop.h"
 
 #include "main.h"
 
 // Enables certain modules for testing
-#define GPIO_T_TEST
+//#define GPIO_T_TEST
 //#define DAC_TEST // If defined, outputs 00 and 90 phase signals to DAC
 //#define UART_TEST
 
 // Globals
-TIM_HandleTypeDef htim3 = {0}; // Handles 40KHz refresh
-
-TIM_HandleTypeDef htim1 = {0}; // Handles PWM
-TIM_HandleTypeDef htim9 = {0};
+TIM_HandleTypeDef htim1 = {0}; // Handles PWM for h90_pwm00
+TIM_HandleTypeDef htim9 = {0}; // Handles PWM for h00_pwm90
 
 static uint32_t g_pwidth_temp = 0;
-static uint32_t g_pwidth_h90_pwm00 = PWM_PWIDTH_INIT;
-static uint32_t g_pwidth_h00_pwm90 = PWM_PWIDTH_INIT;
+static uint32_t g_adcval_h90_pwm00 = PWM_PWIDTH_INIT;
+static uint32_t g_adcval_h00_pwm90 = PWM_PWIDTH_INIT;
 
 static uint32_t g_ADCbuf[ADC_BUFFER_SIZE];
 
 static Hilbert_Buf g_hbuf = {0};
 
-//-------------------------------------
-// Assumes pwidth is a 12 bit number (0 to 4095)
-static void PWM_set_12bit(uint32_t pwidth1, uint32_t pwidth2) {
-    uint32_t new_pwidth1, new_pwidth2; 
+volatile uint32_t g_events = EVENTS_INIT;
 
-    // Convert 12bit number to PWM pulse width
-    new_pwidth1 = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth1)/1000;
-    new_pwidth2 = (PWM_PWIDTH_12BIT_RES_X1000 * pwidth2)/1000;
+//--------------------------------------
 
-    PWM_config(&htim1, new_pwidth1, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-
-    PWM_config(&htim9, new_pwidth2, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
+void event_set_pwm() {
+    PWM_set_12bit(g_adcval_h90_pwm00, g_adcval_h00_pwm90);
 }
 
-// Runs @ 40KHz (theoretically)
-void TIM3_IRQHandler(void) {
-    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
-
-    PWM_set_12bit(g_pwidth_h90_pwm00, g_pwidth_h00_pwm90);
+void event_compute_hilbert() {
+    // buffer value and calculate the hilbert outputs
+    hilbert_record(&g_hbuf, g_pwidth_temp);
+    g_adcval_h00_pwm90 = hilbert_phase_00_12bit(&g_hbuf);
+    g_adcval_h90_pwm00 = hilbert_phase_90_12bit(&g_hbuf);
 }
 
-// Called when ADC buffer is half full
-void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
+void event_adc_avg_half() {
     int i;
 
     // reset pwidth temp
@@ -69,14 +59,8 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
     }
 }
 
-// Called by HAL_ADC_IRQHandler when ADC buffer is full
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+void event_adc_avg_full() {
     int i;
-
-#ifdef GPIO_T_TEST
-    // GPIO toggle for testing
-    HAL_GPIO_TogglePin(GPIO_TEST);
-#endif
 
     // adds sum of first to sum of second half of buffer (index 22 - 44)
     for (i = ADC_BUFFER_HALF_SIZE; i < ADC_BUFFER_SIZE; i++) {
@@ -86,16 +70,49 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     // get average value in 1/40kHz window
     g_pwidth_temp = g_pwidth_temp/ADC_BUFFER_SIZE;
 
-    // buffer value and calculate the hilbert outputs
-    hilbert_record(&g_hbuf, g_pwidth_temp);
-    g_pwidth_h00_pwm90 = hilbert_phase_00_12bit(&g_hbuf);
-    g_pwidth_h90_pwm00 = hilbert_phase_90_12bit(&g_hbuf);
-
+#ifdef GPIO_T_TEST
+    // GPIO toggle for testing
+    HAL_GPIO_TogglePin(GPIO_TEST);
+#endif
 #ifdef DAC_TEST
     // Output to DAC for Testing
     DAC_set_channel_value(DAC_CHANNEL_00, g_pwidth_h00_pwm90);
     DAC_set_channel_value(DAC_CHANNEL_90, g_pwidth_h90_pwm00);
 #endif
+}
+
+void process_events(uint32_t events) {
+    if (!events)
+        return;
+
+    // Handle SET_PWM event
+    if (EVENT_IS_SET(&g_events, EVENT_SET_PWM)) {
+        event_set_pwm();
+
+        RESET_EVENT(&g_events, EVENT_SET_PWM);
+    }
+
+    // Handle HILBERT_COMPUTE event
+    else if (EVENT_IS_SET(&g_events, EVENT_HILBERT_COMPUTE)) {
+        event_compute_hilbert();
+
+        RESET_EVENT(&g_events, EVENT_HILBERT_COMPUTE);
+    }
+
+    // Handle ADC_AVG_FULL event for averaging second half of ADC buffer
+    else if (EVENT_IS_SET(&g_events, EVENT_ADC_AVG_FULL)) {
+        event_adc_avg_full();
+
+        SET_EVENT(&g_events, EVENT_HILBERT_COMPUTE);
+        RESET_EVENT(&g_events, EVENT_ADC_AVG_FULL);
+    }
+
+    // Handle ADC_AVG_HALF event for averaging first half of ADC buffer
+    else if (EVENT_IS_SET(&g_events, EVENT_ADC_AVG_HALF)) {
+        event_adc_avg_half();
+
+        RESET_EVENT(&g_events, EVENT_ADC_AVG_HALF);
+    }
 }
 
 int main(void) {
@@ -117,7 +134,7 @@ int main(void) {
 #endif
 
     // Timer Initialization
-    MX_TIM3_init(&htim3);
+    MX_TIM3_init();
     MX_TIM1_init(&htim1);
     MX_TIM9_init(&htim9);
     TIM3_Interrupt_init();
@@ -129,7 +146,7 @@ int main(void) {
 #endif
 
     // Start
-    TIM3_start_IT(&htim3);
+    TIM3_start_IT();
     PWM_start(&htim1, &htim9);
     ADC1_start_DMA(g_ADCbuf, ADC_BUFFER_SIZE);
     DAC_start();
@@ -137,6 +154,6 @@ int main(void) {
     __enable_irq();
 
     while (1) {
-        delay(5000000);
+        process_events(g_events);
     }
 }

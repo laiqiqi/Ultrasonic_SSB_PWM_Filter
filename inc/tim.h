@@ -19,7 +19,7 @@
 #define PWM_PHASE_00 PWM_PERIOD/4 // Sets phase 90 degrees ahead of other
 #define PWM_PHASE_90 0
 
-void MX_TIM3_init(TIM_HandleTypeDef*);
+void MX_TIM3_init();
 void MX_TIM1_init(TIM_HandleTypeDef*);
 void MX_TIM9_init(TIM_HandleTypeDef*);
 

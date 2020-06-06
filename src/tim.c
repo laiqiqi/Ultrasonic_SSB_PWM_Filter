@@ -1,31 +1,43 @@
 #include "tim.h"
 
+#include "event_loop.h"
 #include "error.h"
 #include "pwm.h"
 
+TIM_HandleTypeDef htim3 = {0}; // Handles 40KHz clock
+
+extern uint32_t g_events;
+
+// Runs @ 40KHz (theoretically)
+void TIM3_IRQHandler(void) {
+    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE); // clear interrupt flag
+
+    SET_EVENT(&g_events, EVENT_SET_PWM);
+}
+
 // Sets up TIM3 at 40kHz
-void MX_TIM3_init(TIM_HandleTypeDef* htim3) {
+void MX_TIM3_init() {
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-    htim3->Instance = TIM3;
-    htim3->Init.Prescaler = 0;
-    htim3->Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim3->Init.Period = TIM3_PERIOD;
-    htim3->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim3->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    htim3.Instance = TIM3;
+    htim3.Init.Prescaler = 0;
+    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim3.Init.Period = TIM3_PERIOD;
+    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     __HAL_RCC_TIM3_CLK_ENABLE();
 
     // Set timer clock source
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(htim3, &sClockSourceConfig) != HAL_OK) {
+    if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
         Error_Handler();
     }
 
     // Triggers outputs that enable other timers
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_ENABLE;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(htim3, &sMasterConfig) != HAL_OK) {
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
         Error_Handler();
     }
 }
@@ -36,8 +48,8 @@ void TIM3_Interrupt_init(void) {
     HAL_NVIC_EnableIRQ(TIM3_IRQn);
 }
 
-void TIM3_start_IT(TIM_HandleTypeDef* htim3) {
-    HAL_TIM_Base_Start_IT(htim3);
+void TIM3_start_IT() {
+    HAL_TIM_Base_Start_IT(&htim3);
 }
 
 // Sets up TIM1 to start When TIM3 does
